@@ -377,11 +377,22 @@ app.delete("/api/agents/:id", requireAdmin, (req, res) => {
 
 // 2. Manage Chats
 app.get("/api/chats", (req, res) => {
-  res.json(getChats());
+  const userId = req.headers["x-user-id"] as string;
+  if (!userId) {
+    res.status(401).json({ error: "Não autorizado" });
+    return;
+  }
+  const chats = getChats().filter(c => c.userId === userId || (!c.userId && userId === 'user-admin-1'));
+  res.json(chats);
 });
 
 app.post("/api/chats", (req, res) => {
   const { agentId, title } = req.body;
+  const userId = req.headers["x-user-id"] as string;
+  if (!userId) {
+    res.status(401).json({ error: "Não autorizado" });
+    return;
+  }
   if (!agentId) {
     res.status(400).json({ error: "ID do Agente é obrigatório" });
     return;
@@ -401,6 +412,7 @@ app.post("/api/chats", (req, res) => {
     title: title || `Conversa com ${agent.name}`,
     createdAt: new Date().toISOString(),
     messages: [],
+    userId,
   };
 
   chats.push(newChat);
@@ -410,7 +422,19 @@ app.post("/api/chats", (req, res) => {
 
 app.delete("/api/chats/:id", (req, res) => {
   const { id } = req.params;
+  const userId = req.headers["x-user-id"] as string;
+  if (!userId) {
+    res.status(401).json({ error: "Não autorizado" });
+    return;
+  }
+
   let chats = getChats();
+  const chat = chats.find((c) => c.id === id);
+  if (chat && chat.userId && chat.userId !== userId) {
+    res.status(403).json({ error: "Não autorizado a excluir esta conversa" });
+    return;
+  }
+
   chats = chats.filter((c) => c.id !== id);
   saveChats(chats);
   res.json({ success: true });
@@ -420,6 +444,7 @@ app.delete("/api/chats/:id", (req, res) => {
 app.post("/api/chats/:id/messages", async (req, res) => {
   const { id } = req.params;
   const { text } = req.body;
+  const userId = req.headers["x-user-id"] as string;
 
   if (!text || text.trim() === "") {
     res.status(400).json({ error: "Texto do prompt é obrigatório" });
@@ -434,6 +459,11 @@ app.post("/api/chats/:id/messages", async (req, res) => {
   }
 
   const chat = chats[chatIndex];
+  if (chat.userId && chat.userId !== userId) {
+    res.status(403).json({ error: "Não autorizado a interagir nesta conversa" });
+    return;
+  }
+
   const agents = getAgents();
   const agent = agents.find((a) => a.id === chat.agentId);
 

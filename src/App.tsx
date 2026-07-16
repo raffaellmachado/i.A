@@ -75,8 +75,13 @@ export default function App() {
   };
 
   const fetchChats = async () => {
+    if (!currentUser) return;
     try {
-      const res = await fetch("/api/chats");
+      const res = await fetch("/api/chats", {
+        headers: {
+          "x-user-id": currentUser.id
+        }
+      });
       if (!res.ok) throw new Error("Falha ao carregar histórico de conversas");
       const data = await res.json();
       // Sort chats newest first
@@ -106,8 +111,14 @@ export default function App() {
   };
 
   const handleDeleteChat = async (chatId: string) => {
+    if (!currentUser) return;
     try {
-      const res = await fetch(`/api/chats/${chatId}`, { method: "DELETE" });
+      const res = await fetch(`/api/chats/${chatId}`, {
+        method: "DELETE",
+        headers: {
+          "x-user-id": currentUser.id
+        }
+      });
       if (res.ok) {
         if (activeChatId === chatId) {
           setActiveChatId(null);
@@ -120,6 +131,7 @@ export default function App() {
   };
 
   const handleNewChat = async () => {
+    if (!currentUser) return;
     if (!selectedAgentIdForNewChat && agents.length > 0) {
       setSelectedAgentIdForNewChat(agents[0].id);
     }
@@ -133,7 +145,10 @@ export default function App() {
     try {
       const res = await fetch("/api/chats", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": currentUser.id
+        },
         body: JSON.stringify({ agentId }),
       });
       if (res.ok) {
@@ -149,10 +164,14 @@ export default function App() {
   };
 
   const handleNewChatWithAgent = async (agentId: string) => {
+    if (!currentUser) return;
     try {
       const res = await fetch("/api/chats", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": currentUser.id
+        },
         body: JSON.stringify({ agentId }),
       });
       if (res.ok) {
@@ -197,7 +216,10 @@ export default function App() {
     try {
       const res = await fetch(`/api/chats/${activeChatId}/messages`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": currentUser?.id || ""
+        },
         body: JSON.stringify({ text }),
       });
       
