@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  gemini-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gemini_studio_app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      # Inserir sua chave de API do Gemini para uso em ambiente Docker
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-""}
+    volumes:
+      # Volume de persistência local para armazenar usuários, agentes e chats
+      - ./data-store:/app/data-store
+    restart: unless-stopped

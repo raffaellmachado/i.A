@@ -1,0 +1,6 @@
+{
+  "name": "Plataforma de Agentes de IA Gemini",
+  "description": "Crie agentes de IA personalizados com base no Gemini, gerencie histórico de conversas e faça upload de pastas de documentos como base de conhecimento.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
