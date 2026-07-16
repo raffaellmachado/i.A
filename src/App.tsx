@@ -169,6 +169,28 @@ export default function App() {
 
   const handleSendMessage = async (text: string) => {
     if (!activeChatId) return;
+
+    // Optimistically add user's message immediately
+    const tempUserId = `msg-${Date.now()}-user-temp`;
+    const tempUserMsg = {
+      id: tempUserId,
+      role: "user" as const,
+      text,
+      createdAt: new Date().toISOString()
+    };
+
+    setChats(prevChats => 
+      prevChats.map(chat => {
+        if (chat.id === activeChatId) {
+          return {
+            ...chat,
+            messages: [...chat.messages, tempUserMsg]
+          };
+        }
+        return chat;
+      })
+    );
+
     setIsSending(true);
     setError(null);
 
@@ -188,8 +210,61 @@ export default function App() {
     } catch (err: any) {
       console.error("Erro ao enviar mensagem:", err);
       setError(`Erro ao responder: ${err.message || err}`);
+      // Revert the optimistic message if it failed
+      setChats(prevChats => 
+        prevChats.map(chat => {
+          if (chat.id === activeChatId) {
+            return {
+              ...chat,
+              messages: chat.messages.filter(m => m.id !== tempUserId)
+            };
+          }
+          return chat;
+        })
+      );
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const handleDeleteAgent = async (agentId: string) => {
+    if (currentUser?.role !== 'admin') {
+      setError("Apenas administradores podem excluir agentes.");
+      return;
+    }
+
+    if (agents.length <= 1) {
+      setError("Não é possível excluir o único agente de IA ativo no sistema. Crie outro primeiro.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/agents/${agentId}`, {
+        method: "DELETE",
+        headers: {
+          "x-user-id": currentUser.id
+        }
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Falha ao excluir agente");
+      }
+
+      await fetchAgents();
+      // If we deleted the agent that was selected for new chats, select another one
+      if (selectedAgentIdForNewChat === agentId) {
+        const remainingAgents = agents.filter(a => a.id !== agentId);
+        if (remainingAgents.length > 0) {
+          setSelectedAgentIdForNewChat(remainingAgents[0].id);
+        } else {
+          setSelectedAgentIdForNewChat("");
+        }
+      }
+      setError(null);
+    } catch (err: any) {
+      console.error("Erro excluindo agente:", err);
+      setError(`Erro ao excluir agente: ${err.message || err}`);
     }
   };
 
@@ -270,6 +345,7 @@ export default function App() {
         agents={agents}
         activeView={activeView}
         onSwitchToCreateAgent={handleSwitchToCreateAgent}
+        onDeleteAgent={handleDeleteAgent}
         onSelectAgentForNewChat={setSelectedAgentIdForNewChat}
         selectedAgentIdForNewChat={selectedAgentIdForNewChat}
         currentUser={currentUser}

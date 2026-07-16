@@ -12,6 +12,7 @@ interface SidebarProps {
   agents: AIAgent[];
   activeView: 'chat' | 'create-agent' | 'user-admin';
   onSwitchToCreateAgent: (agentToEdit?: AIAgent) => void;
+  onDeleteAgent: (agentId: string) => void;
   onSelectAgentForNewChat: (agentId: string) => void;
   selectedAgentIdForNewChat: string;
   currentUser: User;
@@ -30,6 +31,7 @@ export default function Sidebar({
   agents,
   activeView,
   onSwitchToCreateAgent,
+  onDeleteAgent,
   onSelectAgentForNewChat,
   selectedAgentIdForNewChat,
   currentUser,
@@ -110,8 +112,27 @@ export default function Sidebar({
         </button>
       </div>
 
+      {/* Select Agent for Quick Chat */}
+      <div id="agent-quick-select" className="px-5 pt-4 pb-1">
+        <label className="block text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5 text-left">
+          Agente Ativo para Nova Conversa
+        </label>
+        <select
+          id="select-agent-new-chat"
+          value={selectedAgentIdForNewChat}
+          onChange={(e) => onSelectAgentForNewChat(e.target.value)}
+          className="w-full px-3 py-1.5 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+        >
+          {agents.map((agent) => (
+            <option key={agent.id} value={agent.id}>
+              {agent.name} ({agent.model === "gemini-3.5-flash" ? "Flash" : "Pro"})
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* Primary Action Buttons */}
-      <div id="sidebar-primary-actions" className="p-4 space-y-2">
+      <div id="sidebar-primary-actions" className="p-4 space-y-2 border-b border-slate-200 dark:border-zinc-800">
         <button
           id="btn-new-chat"
           onClick={onNewChat}
@@ -139,25 +160,6 @@ export default function Sidebar({
             🔒 Criação e edição de agentes são restritas aos Administradores do sistema.
           </div>
         )}
-      </div>
-
-      {/* Select Agent for Quick Chat */}
-      <div id="agent-quick-select" className="px-4 py-2 border-b border-slate-200 dark:border-zinc-800">
-        <label className="block text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
-          Agente Ativo para Nova Conversa
-        </label>
-        <select
-          id="select-agent-new-chat"
-          value={selectedAgentIdForNewChat}
-          onChange={(e) => onSelectAgentForNewChat(e.target.value)}
-          className="w-full px-3 py-1.5 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
-        >
-          {agents.map((agent) => (
-            <option key={agent.id} value={agent.id}>
-              {agent.name} ({agent.model === "gemini-3.5-flash" ? "Flash" : "Pro"})
-            </option>
-          ))}
-        </select>
       </div>
 
       {/* Conversas Recentes / Chat History */}
@@ -239,7 +241,7 @@ export default function Sidebar({
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5 shrink-0">
                   {agent.knowledgeFiles.length > 0 && (
                     <span className="text-[10px] font-medium bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shrink-0" title="Possui Base de Conhecimento">
                       <FileText className="w-2.5 h-2.5" />
@@ -247,9 +249,22 @@ export default function Sidebar({
                     </span>
                   )}
                   {isAdmin ? (
-                    <span className="opacity-0 group-hover:opacity-100 text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline font-semibold cursor-pointer">
-                      Editar
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="opacity-0 group-hover:opacity-100 text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline font-semibold cursor-pointer">
+                        Editar
+                      </span>
+                      <button
+                        id={`delete-agent-${agent.id}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteAgent(agent.id);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-500 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded transition duration-150 cursor-pointer"
+                        title="Excluir Agente"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   ) : (
                     <span className="text-[9px] text-slate-400 dark:text-zinc-500">Ativo</span>
                   )}

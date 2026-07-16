@@ -301,7 +301,7 @@ export default function ChatWindow({
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0 shadow-sm ${
                   isUser
                     ? "bg-slate-800 dark:bg-indigo-600"
-                    : "bg-indigo-600 dark:bg-slate-800 border dark:border-slate-700"
+                    : "bg-indigo-600 dark:bg-zinc-800 border dark:border-zinc-700"
                 }`}
               >
                 {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
@@ -313,11 +313,11 @@ export default function ChatWindow({
                 <div
                   className={`rounded-2xl px-5 py-3.5 shadow-sm border ${
                     isUser
-                      ? "bg-slate-800 dark:bg-indigo-650 text-white border-slate-700 dark:border-indigo-600 rounded-tr-none"
+                      ? "bg-slate-100 dark:bg-indigo-650 text-slate-800 dark:text-white border-slate-200 dark:border-indigo-600 rounded-tr-none"
                       : "bg-white dark:bg-zinc-800 text-slate-800 dark:text-slate-100 border-slate-200/70 dark:border-zinc-700 rounded-tl-none"
                   }`}
                 >
-                  <div className="prose prose-slate dark:prose-invert max-w-none">
+                  <div className={`prose max-w-none ${isUser ? "prose-slate dark:prose-invert text-slate-800 dark:text-white" : "prose-slate dark:prose-invert text-slate-800 dark:text-zinc-100"}`}>
                     {formatMessageText(message.text)}
                   </div>
                 </div>
